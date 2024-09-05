@@ -23,16 +23,16 @@ goose-up:
 # example : make goose-up
 	@echo " >> Installing goose if not installed"
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
-	@goose -dir migrations/sql postgres "host=localhost user=postgres password=password dbname=shopeefun_order sslmode=disable" up
+	@goose -dir migrations/sql postgres "host=localhost user=postgres password=21012123op dbname=shopeefun_order sslmode=disable" up
 
 goose-down:
 # example : make goose-down
 	@echo " >> Installing goose if not installed"
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
-	@goose -dir migrations/sql postgres "host=localhost user=postgres password=password dbname=shopeefun_order sslmode=disable" down
+	@goose -dir migrations/sql postgres "host=localhost user=postgres password=21012123op dbname=shopeefun_order sslmode=disable" down
 
 goose-status:
 # example : make goose-status
 	@echo " >> Installing goose if not installed"
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
-	@goose -dir migrations/sql postgres "host=localhost user=postgres password=password dbname=shopeefun_order sslmode=disable" status
+	@goose -dir migrations/sql postgres "host=localhost user=postgres password=21012123op dbname=shopeefun_order sslmode=disable" status
