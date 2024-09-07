@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS cart_items
     qty INT NOT NULL,
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT unique_user_product UNIQUE (user_id, product_id)
 )
 -- +goose StatementEnd
 
