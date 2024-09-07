@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/config"
+	cartHandler "github.com/hilmiikhsan/shopeefun-cart-order-service/handlers/cart"
+	"github.com/hilmiikhsan/shopeefun-cart-order-service/repository/cart"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/routes"
+	cartUsecase "github.com/hilmiikhsan/shopeefun-cart-order-service/usecase/cart"
+	"github.com/hilmiikhsan/shopeefun-cart-order-service/validators"
 )
 
 func main() {
@@ -32,5 +37,14 @@ func main() {
 }
 
 func setupRoutes(db *sql.DB) *routes.Routes {
-	return &routes.Routes{}
+	ctx := context.Background()
+	validatorInstance := validators.NewValidator()
+
+	cartRepository := cart.NewStore(db)
+	cartUseCase := cartUsecase.NewCart(ctx, cartRepository)
+	cartHandler := cartHandler.NewHandler(cartUseCase, validatorInstance)
+
+	return &routes.Routes{
+		Cart: cartHandler,
+	}
 }
