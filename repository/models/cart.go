@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,13 +22,14 @@ type GetCartRequest struct {
 	ProductID []uuid.UUID `db:"product_id"`
 }
 
-type AddCartRequest struct {
-	UserID     uuid.UUID   `db:"user_id"`
-	ProductIDs []uuid.UUID `db:"product_ids"`
-	Qty        int         `db:"qty"`
+type CartRequest struct {
+	UserID    uuid.UUID    `db:"user_id"`
+	ProductID uuid.UUID    `db:"product_ids"`
+	Qty       int          `db:"qty"`
+	DeletedAt sql.NullTime `db:"deleted_at"`
 }
 
 type DeleteCartRequest struct {
-	UserID    uuid.UUID   `db:"user_id"`
-	ProductID []uuid.UUID `db:"product_id"`
+	UserID    uuid.UUID `db:"user_id"`
+	ProductID uuid.UUID `db:"product_id"`
 }

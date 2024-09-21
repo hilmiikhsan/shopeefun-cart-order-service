@@ -17,8 +17,8 @@ import (
 // cartDto is an interface that defines the methods that our Handler struct depends on.
 type cartDto interface {
 	GetCartByUserID(ctx context.Context, req dto.GetCartRequest) ([]dto.GetCartResponse, error)
-	AddCart(ctx context.Context, req dto.AddCartRequest) (*uuid.UUID, error)
-	UpdateQty(ctx context.Context, req dto.UpdateCartRequest) (string, error)
+	AddCart(ctx context.Context, req dto.AddCartRequest) (dto.GetCartResponse, error)
+	UpdateQty(ctx context.Context, req dto.UpdateCartRequest) ([]dto.GetCartResponse, error)
 	DeleteCart(ctx context.Context, req dto.DeleteCartRequest) (string, error)
 }
 
@@ -118,17 +118,6 @@ func (h *Handler) AddCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.validator.ValidateNoDuplicateAddProductIDs(req.ProductIDs); err != nil {
-		logrus.Errorf("[Handler][UpdateCart] Validation failed: %v", err)
-		res := helpers.Response{
-			Err:    err.Error(),
-			Msg:    helpers.FAILED_RESPONSE,
-			Status: false,
-		}
-		res.HandleResponse(w, http.StatusBadRequest)
-		return
-	}
-
 	if err := h.validator.ValidateRequest(req); err != nil {
 		logrus.Errorf("[Handler][AddCart] Validation failed: %v", err)
 		code, errorMessages := errmsg.ErrorValidationHandler(err)
@@ -141,39 +130,78 @@ func (h *Handler) AddCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ids []uuid.UUID
-	for _, productID := range req.ProductIDs {
-		id, err := h.cart.AddCart(r.Context(), dto.AddCartRequest{
-			UserID:     req.UserID,
-			ProductIDs: []string{productID},
-			Qty:        req.Qty,
-		})
-		if err != nil {
-			logrus.Errorf("[Handler][AddCart] Failed to add cart: %v", err)
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		logrus.Errorf("[Handler][AddCart] Failed to parse user id: %v", err)
+		res := helpers.Response{
+			Err:    err.Error(),
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, http.StatusBadRequest)
+		return
+	}
 
-			if strings.Contains(err.Error(), errmsg.ErrDoesntNewItemsAdded) {
-				res := helpers.Response{
-					Err:    err.Error(),
-					Msg:    helpers.FAILED_RESPONSE,
-					Status: false,
-				}
-				res.HandleResponse(w, http.StatusConflict)
-				return
-			}
+	if req.Qty <= 0 {
+		logrus.Errorf("[Handler][AddCart] Quantity must be greater than 0")
+		res := helpers.Response{
+			Err:    "Qty harus lebih dari 0.",
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, http.StatusBadRequest)
+		return
+	}
 
+	productResponses, err := h.cart.AddCart(r.Context(), dto.AddCartRequest{
+		UserID:    userID.String(),
+		ProductID: req.ProductID,
+		Qty:       req.Qty,
+	})
+	if err != nil {
+		logrus.Errorf("[Handler][AddCart] Failed to add product to cart: %v", err)
+
+		if strings.Contains(err.Error(), errmsg.ErrFailedToParseProductID) {
 			res := helpers.Response{
-				Err:    helpers.STATUS_INTERNAL_ERR,
+				Err:    err.Error(),
 				Msg:    helpers.FAILED_RESPONSE,
 				Status: false,
 			}
-			res.HandleResponse(w, http.StatusInternalServerError)
+			res.HandleResponse(w, http.StatusBadRequest)
 			return
 		}
-		ids = append(ids, *id)
+
+		if strings.Contains(err.Error(), errmsg.ErrDoesntNewItemsAdded) {
+			res := helpers.Response{
+				Err:    err.Error(),
+				Msg:    helpers.FAILED_RESPONSE,
+				Status: false,
+			}
+			res.HandleResponse(w, http.StatusConflict)
+			return
+		}
+
+		if strings.Contains(err.Error(), errmsg.ErrUserNotFound) || strings.Contains(err.Error(), errmsg.ErrProductNotFound) {
+			res := helpers.Response{
+				Err:    err.Error(),
+				Msg:    helpers.FAILED_RESPONSE,
+				Status: false,
+			}
+			res.HandleResponse(w, http.StatusNotFound)
+			return
+		}
+
+		res := helpers.Response{
+			Err:    helpers.STATUS_INTERNAL_ERR,
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, http.StatusInternalServerError)
+		return
 	}
 
 	res := helpers.Response{
-		Data:   ids,
+		Data:   productResponses,
 		Msg:    helpers.SUCCESS_RESPONSE,
 		Status: true,
 	}
@@ -260,7 +288,8 @@ func (h *Handler) UpdateCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := helpers.Response{
-		Msg:    response,
+		Data:   response,
+		Msg:    helpers.SUCCESS_RESPONSE,
 		Status: true,
 	}
 
