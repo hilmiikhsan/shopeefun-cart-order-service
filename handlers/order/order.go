@@ -15,6 +15,7 @@ import (
 
 type orderDto interface {
 	CreateOrder(ctx context.Context, req dto.CreateOrderRequest) (*uuid.UUID, error)
+	UpdateOrder(ctx context.Context, req dto.UpdateOrderRequest) (*string, error)
 }
 
 type Handler struct {
@@ -81,4 +82,50 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.HandleResponse(w, http.StatusCreated)
+}
+
+func (h *Handler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
+	var req dto.UpdateOrderRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logrus.Errorf("[Handler][UpdateOrder] Failed to decode request body: %v", err)
+		res := helpers.Response{
+			Err:    err.Error(),
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.validator.ValidateRequest(req); err != nil {
+		logrus.Errorf("[Handler][UpdateOrder] Validation failed: %v", err)
+		code, errorMessages := errmsg.ErrorValidationHandler(err)
+		res := helpers.Response{
+			Err:    helpers.ErrResponseFieldFormat(errorMessages),
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, code)
+		return
+	}
+
+	message, err := h.order.UpdateOrder(r.Context(), req)
+	if err != nil {
+		logrus.Errorf("[Handler][UpdateOrder] Failed to update order: %v", err)
+		res := helpers.Response{
+			Err:    err.Error(),
+			Msg:    helpers.FAILED_RESPONSE,
+			Status: false,
+		}
+		res.HandleResponse(w, http.StatusInternalServerError)
+		return
+	}
+
+	res := helpers.Response{
+		Msg:    message,
+		Status: true,
+	}
+
+	res.HandleResponse(w, http.StatusOK)
 }

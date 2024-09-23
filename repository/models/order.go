@@ -9,6 +9,7 @@ import (
 
 type Order struct {
 	UserID        uuid.UUID       `db:"user_id"`
+	OrderID       uuid.UUID       `db:"order_id"`
 	PaymentTypeID uuid.UUID       `db:"payment_type_id"`
 	OrderNumber   string          `db:"order_number"`
 	TotalPrice    float64         `db:"total_price"`

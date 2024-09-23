@@ -27,4 +27,13 @@ const (
 			created_at
 		) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING ref_code
 	`
+
+	queryUpdateOrder = `
+		UPDATE orders
+		SET
+			status = $1,
+			is_paid = $2, 
+			updated_at = NOW()
+		WHERE id = $3 RETURNING ref_code
+	`
 )

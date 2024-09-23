@@ -20,3 +20,10 @@ type CreateOrderRequest struct {
 	UpdatedAt     *time.Time      `json:"updated_at"`
 	DeletedAt     *time.Time      `json:"deleted_at"`
 }
+
+type UpdateOrderRequest struct {
+	OrderID   uuid.UUID  `json:"order_id" validate:"required,uuid"`
+	Status    string     `json:"status" validate:"required"`
+	IsPaid    bool       `json:"is_paid"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}

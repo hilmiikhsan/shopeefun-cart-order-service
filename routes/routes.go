@@ -44,6 +44,7 @@ func (r *Routes) cartRoutes() {
 
 func (r *Routes) orderRoutes() {
 	r.Router.HandleFunc("POST /order/create", middleware.ApplyMiddleware(r.Order.CreateOrder, middleware.EnabledCors, middleware.LoggerMiddleware()))
+	r.Router.HandleFunc("POST /order/callback", middleware.ApplyMiddleware(r.Order.UpdateOrder, middleware.EnabledCors, middleware.LoggerMiddleware()))
 }
 
 func (r *Routes) SetupRouter() {

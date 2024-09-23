@@ -58,3 +58,20 @@ func (o *store) CreateOrderItemsLogs(ctx context.Context, tx *sql.Tx, req models
 
 	return &refCode, nil
 }
+
+// UpdateOrder is a method that updates an existing order.
+// It returns an error if any occurs during the update process.
+func (o *store) UpdateOrder(ctx context.Context, tx *sql.Tx, req models.Order) (*string, error) {
+	var refCode string
+
+	if err := tx.QueryRowContext(ctx, queryUpdateOrder,
+		req.Status,
+		req.IsPaid,
+		req.OrderID,
+	).Scan(&refCode); err != nil {
+		logrus.Errorf("[Store][UpdateOrder] Error on updating order: %v", err)
+		return nil, err
+	}
+
+	return &refCode, nil
+}
