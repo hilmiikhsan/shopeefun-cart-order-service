@@ -7,9 +7,12 @@ import (
 
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/config"
 	cartHandler "github.com/hilmiikhsan/shopeefun-cart-order-service/handlers/cart"
+	orderHandler "github.com/hilmiikhsan/shopeefun-cart-order-service/handlers/order"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/repository/cart"
+	"github.com/hilmiikhsan/shopeefun-cart-order-service/repository/order"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/routes"
 	cartUsecase "github.com/hilmiikhsan/shopeefun-cart-order-service/usecase/cart"
+	orderUsecase "github.com/hilmiikhsan/shopeefun-cart-order-service/usecase/order"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/validators"
 )
 
@@ -44,7 +47,12 @@ func setupRoutes(db *sql.DB) *routes.Routes {
 	cartUseCase := cartUsecase.NewCart(ctx, cartRepository)
 	cartHandler := cartHandler.NewHandler(cartUseCase, validatorInstance)
 
+	orderRepository := order.NewStore(db)
+	orderUseCase := orderUsecase.NewOrder(ctx, orderRepository, db)
+	orderHandler := orderHandler.NewHandler(orderUseCase, validatorInstance)
+
 	return &routes.Routes{
-		Cart: cartHandler,
+		Cart:  cartHandler,
+		Order: orderHandler,
 	}
 }

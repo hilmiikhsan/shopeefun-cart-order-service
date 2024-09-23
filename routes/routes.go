@@ -8,6 +8,7 @@ import (
 
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/config"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/handlers/cart"
+	"github.com/hilmiikhsan/shopeefun-cart-order-service/handlers/order"
 	"github.com/hilmiikhsan/shopeefun-cart-order-service/utils/middleware"
 	"github.com/spf13/viper"
 )
@@ -15,6 +16,7 @@ import (
 type Routes struct {
 	Router *http.ServeMux
 	Cart   *cart.Handler
+	Order  *order.Handler
 }
 
 func URLRewriter(baseURLPath string, next http.Handler) http.HandlerFunc {
@@ -40,10 +42,15 @@ func (r *Routes) cartRoutes() {
 	r.Router.HandleFunc("DELETE /cart/delete/{user_id}", middleware.ApplyMiddleware(r.Cart.DeleteCart, middleware.EnabledCors, middleware.LoggerMiddleware()))
 }
 
+func (r *Routes) orderRoutes() {
+	r.Router.HandleFunc("POST /order/create", middleware.ApplyMiddleware(r.Order.CreateOrder, middleware.EnabledCors, middleware.LoggerMiddleware()))
+}
+
 func (r *Routes) SetupRouter() {
 	r.Router = http.NewServeMux()
 	r.SetupBaseURL()
 	r.cartRoutes()
+	r.orderRoutes()
 }
 
 func (r *Routes) Run(port string) {
